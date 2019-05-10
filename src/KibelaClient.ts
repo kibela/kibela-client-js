@@ -3,7 +3,8 @@ import { DocumentNode, OperationDefinitionNode, print } from "graphql";
 import inspect from "object-inspect";
 import debugBuilder from "debug";
 
-import { asyncIterableFromStream, sleep, normalizeMimeType } from "./utils";
+import { sleep, normalizeMimeType } from "./utils";
+import { FormatType, FORMAT_MSGPACK, FORMAT_JSON, Serializer } from "./Serializer";
 
 // enabled by env DEBUG=KibelaClient
 const debug = debugBuilder("KibelaClient");
@@ -11,51 +12,6 @@ const debug = debugBuilder("KibelaClient");
 const DEFAULT_ENDPOINT_TEMPLATE = "https://${KIBELA_TEAM}.kibe.la/api/v1";
 export function createEndpoint(subdomain: string, endpoint = DEFAULT_ENDPOINT_TEMPLATE) {
   return endpoint.replace(/\${KIBELA_TEAM}/, subdomain);
-}
-
-export const FORMAT_JSON = "application/json";
-export const FORMAT_MSGPACK = "application/x-msgpack";
-type FormatType = typeof FORMAT_JSON | typeof FORMAT_MSGPACK;
-
-export interface DataSerializer {
-  serialize(mimeType: string, body: object): ArrayBufferView | string;
-  deserialize<T = unknown>(mimeType: string, response: Response): Promise<T>;
-}
-
-export class DefaultSerializer implements DataSerializer {
-  serialize(mimeType: string, body: object) {
-    if (mimeType === FORMAT_MSGPACK) {
-      return msgpack.encode(body);
-    } else if (mimeType === FORMAT_JSON) {
-      return JSON.stringify(body);
-    } else {
-      throw new Error(`Unrecognized MIME type: ${mimeType}`);
-    }
-  }
-
-  async deserialize(mimeType: string, response: Response): Promise<any> {
-    if (mimeType === FORMAT_MSGPACK) {
-      return await msgpack.decodeAsync(asyncIterableFromStream(response.body));
-    } else if (mimeType === FORMAT_JSON) {
-      return await response.json();
-    } else {
-      // While Kibela is in maintenance mode, it may return text/html or text/plain for the API endpoint.
-      return {
-        errors: [
-          {
-            message: `Unrecognized content-type: ${mimeType}`,
-            extensions: {
-              code: "KibelaClient.UNRECOGNIZED_CONTENT_TYPE",
-              contentType: mimeType,
-              body: mimeType.startsWith("text/")
-                ? await response.text()
-                : new Uint8Array(await response.arrayBuffer())
-            }
-          }
-        ]
-      };
-    }
-  }
 }
 
 export const $metadata = Symbol("metadata");
@@ -69,7 +25,7 @@ export type KibelaClientOptions = Readonly<{
   leastDelayMs?: number;
   retryCount?: number;
   format?: FormatType;
-  serializer?: DataSerializer;
+  serializer?: Serializer;
   endpoint?: string;
 }>;
 
@@ -149,8 +105,8 @@ export class KibelaClient {
   public readonly endpoint: string;
   private readonly format: FormatType;
   private readonly headers: Readonly<Record<string, string>>;
-  private readonly fetch: typeof fetch; // browser's fetch
-  private readonly serializer: DataSerializer;
+  private readonly fetch: typeof window.fetch; // browser's fetch
+  private readonly serializer: Serializer;
   private readonly leastDelayMs: number;
   private readonly retryCount: number;
 
@@ -170,7 +126,7 @@ export class KibelaClient {
       authorization: `Bearer ${options.accessToken}`
     };
     this.fetch = options.fetch;
-    this.serializer = options.serializer || new DefaultSerializer();
+    this.serializer = options.serializer || new Serializer();
     this.leastDelayMs = options.leastDelayMs || DEFAULT_LEAST_DELAY_MS;
     this.retryCount = options.retryCount || DEFAULT_RETRY_COUNT;
   }
