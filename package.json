@@ -1,15 +1,28 @@
 {
   "name": "@kibela/kibela-client",
-  "version": "1.0.0",
-  "description": "A client library for Kibela Web API",
+  "version": "0.1.0",
+  "description": "A JavaScript client library for Kibela Web API",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx tsc --noEmit",
+    "hello": "ts-node example/hello-kibela.ts"
   },
-  "author": "",
+  "author": "Bit Journey, Inc.",
   "license": "ISC",
   "devDependencies": {
+    "dotenv": "^8.0.0",
+    "graphql-tag": "^2.10.1",
+    "node-fetch": "^2.5.0",
     "ts-node": "^8.1.0",
     "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "@msgpack/msgpack": "^0.16.0",
+    "@types/debug": "^4.1.4",
+    "@types/graphql": "^14.2.0",
+    "@types/object-inspect": "^1.4.0",
+    "debug": "^4.1.1",
+    "graphql": "^14.3.0",
+    "object-inspect": "^1.6.0"
   }
 }
