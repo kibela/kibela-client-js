@@ -2,7 +2,7 @@
   "name": "@kibela/kibela-client",
   "version": "0.1.0",
   "description": "A JavaScript client library for Kibela Web API",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "prepare": "rm -rf dist ; tsc --project tsconfig.dist.json",
     "test": "tsc --noEmit",
