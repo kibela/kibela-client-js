@@ -25,5 +25,9 @@
     "debug": "^4.1.1",
     "graphql": "^14.3.0",
     "object-inspect": "^1.6.0"
-  }
+  },
+  "files": [
+    "src/**/*.ts",
+    "dist/**/*.*"
+  ]
 }
