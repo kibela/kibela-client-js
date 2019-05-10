@@ -66,10 +66,10 @@ export function ensureStringIsPresent(value: string | null | undefined, message:
 
 declare var process: { env: Record<string, string> };
 
-export function getEnv(name: string): string {
+export function getEnv(name: string): string | undefined {
   if (typeof process === "undefined") {
     throw new Error("No process.env available");
   }
-  return ensureNonNull(process.env[name], name);
+  return process.env[name];
 }
 

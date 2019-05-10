@@ -3,19 +3,23 @@ import fetch from "node-fetch";
 import gql from "graphql-tag";
 
 import { KibelaClient } from "../src/KibelaClient";
-import { getEnv } from "../src/utils";
+import { getEnv, ensureStringIsPresent } from "../src/utils";
 import { name, version } from "../package.json";
 
 // to load KIBELA_* from example/.env (NodeJS only)
 declare function require(path: string): any;
 declare var __dirname;
 require("dotenv").config({
-  path: require("path").resolve(__dirname, ".env"),
-})
+  path: require("path").resolve(__dirname, ".env")
+});
 
-const TEAM = getEnv("KIBELA_TEAM");
-const TOKEN = getEnv("KIBELA_TOKEN");
+// required
+const TEAM = ensureStringIsPresent(getEnv("KIBELA_TEAM"), "KIBELA_TEAM");
+// required
+const TOKEN = ensureStringIsPresent(getEnv("KIBELA_TOKEN"), "KIBELA_TOKEN");
+// optional
 const ENDPOINT = getEnv("KIBELA_ENDPOINT");
+
 const USER_AGENT = `${name}/${version}`;
 
 const client = new KibelaClient({
