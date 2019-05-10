@@ -4,7 +4,8 @@
   "description": "A JavaScript client library for Kibela Web API",
   "main": "index.js",
   "scripts": {
-    "test": "npx tsc --noEmit",
+    "prepare": "rm -rf dist ; tsc --project tsconfig.dist.json",
+    "test": "tsc --noEmit",
     "hello": "ts-node example/hello-kibela.ts"
   },
   "author": "Bit Journey, Inc.",
