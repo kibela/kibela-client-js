@@ -1,35 +1,3 @@
-export function isAsyncIterable<T>(stream: object): stream is AsyncIterable<T> {
-  return !!stream[Symbol.asyncIterator];
-}
-
-export async function* asyncIterableFromStream(
-  stream: ReadableStream<Uint8Array> | AsyncIterable<Uint8Array> | null,
-) {
-  if (stream == null) {
-    return;
-  }
-
-  // node-fetch
-  if (isAsyncIterable(stream)) {
-    for await (const buffer of stream) {
-      yield buffer;
-    }
-    return;
-  }
-
-  // WHATWG fetch (not an async iterators)
-  const reader = stream.getReader();
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) return;
-      yield value;
-    }
-  } finally {
-    reader.releaseLock();
-  }
-}
 
 export function sleep(value: number): Promise<void> {
   return new Promise((resolve) => {

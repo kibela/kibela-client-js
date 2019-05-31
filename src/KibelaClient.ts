@@ -1,4 +1,3 @@
-import * as msgpack from "@msgpack/msgpack";
 import { DocumentNode, OperationDefinitionNode, print } from "graphql";
 import inspect from "object-inspect";
 import debugBuilder from "debug";

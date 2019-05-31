@@ -1,5 +1,4 @@
 import * as msgpack from "@msgpack/msgpack";
-import { asyncIterableFromStream } from "./utils";
 
 export const FORMAT_JSON = "application/json";
 export const FORMAT_MSGPACK = "application/x-msgpack";
@@ -17,10 +16,23 @@ export class Serializer {
   }
 
   public async deserialize(mimeType: string, response: Response): Promise<any> {
+    if (response.body == null) {
+      return {
+        errors: [
+          {
+            message: "Empty content body",
+            extensions: {
+              code: "KibelaClient.INVALID_RESPONSE_BODY"
+            }
+          }
+        ]
+      };
+    }
+
     if (mimeType === FORMAT_MSGPACK) {
-      return await msgpack.decodeAsync(asyncIterableFromStream(response.body));
+        return msgpack.decodeAsync(response.body);
     } else if (mimeType === FORMAT_JSON) {
-      return await response.json();
+      return response.json();
     } else {
       // While Kibela is in maintenance mode, it may return text/html or text/plain for the API endpoint.
       return {
@@ -40,4 +52,3 @@ export class Serializer {
     }
   }
 }
-
