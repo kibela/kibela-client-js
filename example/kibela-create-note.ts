@@ -1,4 +1,5 @@
 #!ts-node
+
 import fetch from "node-fetch";
 import gql from "graphql-tag";
 
@@ -31,20 +32,39 @@ const client = new KibelaClient({
   retryCount: 3
 });
 
-const HelloKibelaClient = gql`
-  query HelloKibeaClient {
-    currentUser {
-      account
+const title = "Hello, Kibela!";
+
+const createNote = gql`
+  mutation CreateNote($input: CreateNoteInput!) {
+    createNote(input: $input) {
+      note {
+        id
+        path
+        publishedAt
+      }
     }
   }
 `;
 
 async function main() {
-  console.log(`Querying to ${client.endpoint} ...`);
-  const response = await client.request({
-    query: HelloKibelaClient
-  });
-  console.dir(response, { depth: 100 });
+  try {
+    console.log(`Querying to ${client.endpoint} ...`);
+    const response = await client.request({
+      query: createNote,
+      variables: {
+        input: {
+          title,
+          content: "", // T/O
+          publishedAt: new Date(),
+          groupIds: [],
+          coediting: true,
+        }
+      }
+    });
+    console.dir(response, { depth: 100 });
+  } catch (e) {
+    console.dir(e, { depth: 100 });
+  }
 }
 
 main();
