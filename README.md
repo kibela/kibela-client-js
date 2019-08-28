@@ -1,4 +1,4 @@
-# Kibela Web API Client for JavaScript
+# Kibela Web API Client for JavaScript [![Build Status](https://travis-ci.org/kibela/kibela-client-js.svg?branch=master)](https://travis-ci.org/kibela/kibela-client-js)
 
 Kibela用のJavaScriptクライアントです。
 
