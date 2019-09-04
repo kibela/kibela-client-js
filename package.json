@@ -23,7 +23,8 @@
     "@types/object-inspect": "^1.4.0",
     "debug": "^4.1.1",
     "graphql": "^14.5.4",
-    "object-inspect": "^1.6.0"
+    "object-inspect": "^1.6.0",
+    "trace-error": "^1.0.3"
   },
   "files": [
     "src/**/*.ts",

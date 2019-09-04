@@ -1,15 +1,24 @@
 import { DocumentNode, OperationDefinitionNode, print } from "graphql";
 import inspect from "object-inspect";
 import debugBuilder from "debug";
+import TraceError from "trace-error";
 
 import { sleep, normalizeMimeType } from "./utils";
-import { FormatType, FORMAT_MSGPACK, FORMAT_JSON, Serializer } from "./Serializer";
+import {
+  FormatType,
+  FORMAT_MSGPACK,
+  FORMAT_JSON,
+  Serializer
+} from "./Serializer";
 
 // enabled by env DEBUG=KibelaClient
 const debug = debugBuilder("KibelaClient");
 
 const DEFAULT_ENDPOINT_TEMPLATE = "https://${KIBELA_TEAM}.kibe.la/api/v1";
-export function createEndpoint(subdomain: string, endpoint = DEFAULT_ENDPOINT_TEMPLATE) {
+export function createEndpoint(
+  subdomain: string,
+  endpoint = DEFAULT_ENDPOINT_TEMPLATE
+) {
   return endpoint.replace(/\${KIBELA_TEAM}/, subdomain);
 }
 
@@ -31,13 +40,11 @@ export type KibelaClientOptions = Readonly<{
 export function getOperationName(doc: DocumentNode): string | null {
   return (
     doc.definitions
-      .filter(
-        (definition): definition is OperationDefinitionNode => {
-          return (
-            definition.kind === "OperationDefinition" && definition.name != null
-          );
-        }
-      )
+      .filter((definition): definition is OperationDefinitionNode => {
+        return (
+          definition.kind === "OperationDefinition" && definition.name != null
+        );
+      })
       .map(node => node.name!.value)[0] || null
   );
 }
@@ -62,7 +69,7 @@ export type NotFoundError = {
   };
 };
 
-export type ErrorType =
+export type GraphqlErrorType =
   | BasicErrorType
   | BudgetExceededErrorType
   | NotFoundError;
@@ -72,15 +79,15 @@ export class GraphqlError extends Error {
     message: string,
     readonly query: string,
     readonly variables: unknown,
-    readonly errors: ReadonlyArray<ErrorType>
+    readonly errors: ReadonlyArray<GraphqlErrorType>
   ) {
     super(message);
   }
 }
 
-export class NetworkError extends Error {
-  constructor(message: string, readonly errors: ReadonlyArray<any>) {
-    super(message);
+export class NetworkError extends TraceError {
+  constructor(message: string, ...errors: ReadonlyArray<Error>) {
+    super(message, ...errors);
   }
 }
 
@@ -212,7 +219,7 @@ export class KibelaClient {
     const tAfterRequest = Date.now();
 
     if (!response) {
-      throw new NetworkError("Invalid HTTP response", networkErrors);
+      throw new NetworkError("Invalid HTTP response", ...networkErrors);
     }
 
     if (responseBody && responseBody.errors) {
@@ -230,7 +237,7 @@ export class KibelaClient {
         `Invalid GraphQL response: ${response.status} ${
           response.statusText
         } ${response.headers.get("content-type")} ${inspect(responseBody)}`,
-        networkErrors
+        ...networkErrors
       );
     }
 
@@ -252,7 +259,9 @@ export class KibelaClient {
     return responseBody;
   }
 
-  private addToDelayMsIfBudgetExhausted(errors: ReadonlyArray<ErrorType>) {
+  private addToDelayMsIfBudgetExhausted(
+    errors: ReadonlyArray<GraphqlErrorType>
+  ) {
     if (errors.length == 1) {
       const x = errors[0].extensions;
       if (
